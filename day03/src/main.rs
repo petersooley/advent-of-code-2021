@@ -1,5 +1,5 @@
 use std::fmt::{Display, Formatter};
-use std::str::{from_utf8, FromStr};
+use std::str::FromStr;
 
 #[derive(Default, Debug)]
 struct Dozen([u16; 12]);
@@ -7,8 +7,8 @@ struct Dozen([u16; 12]);
 impl Dozen {
     fn add(&self, oth: &Dozen, val: u16) -> Self {
         let mut out = [0; 12];
-        for i in 0..12 {
-            out[i] = if oth.0[i] == val {
+        for (i, cur) in out.iter_mut().enumerate() {
+            *cur = if oth.0[i] == val {
                 self.0[i] + 1
             } else {
                 self.0[i]
@@ -17,11 +17,11 @@ impl Dozen {
         Dozen(out)
     }
 
-    fn bin_to_dec(&self) -> u16 {
-        u16::from_str_radix(&self.to_string(), 2).unwrap()
+    fn bin_to_dec(&self) -> u32 {
+        u16::from_str_radix(&self.to_string(), 2).unwrap() as u32
     }
 
-    fn express(gam: &Dozen, eps: &Dozen) -> (u16, u16) {
+    fn express(gam: &Dozen, eps: &Dozen) -> (Dozen, Dozen) {
         let mut gam_rate = [0; 12];
         let mut eps_rate = [0; 12];
         for i in 0..12 {
@@ -34,7 +34,7 @@ impl Dozen {
             }
         }
 
-        (Dozen(gam_rate).bin_to_dec(), Dozen(eps_rate).bin_to_dec())
+        (Dozen(gam_rate), Dozen(eps_rate))
     }
 }
 
@@ -52,7 +52,7 @@ impl FromStr for Dozen {
         let mut d = [0; 12];
         for (i, c) in s.chars().enumerate() {
             if i > 11 {
-                return Err(format!("too many chars in input"));
+                return Err(format!("too many chars in input: {}", s));
             }
             if c == '0' {
                 d[i] = 0;
@@ -90,10 +90,5 @@ fn main() {
     let counts = lines.fold(FoldBits::default(), FoldBits::fold);
     let (gam, eps) = Dozen::express(&counts.gam, &counts.eps);
 
-    println!(
-        "gam {} x eps {}, = {}",
-        gam,
-        eps,
-        (gam as u32) * (eps as u32)
-    );
+    println!("counts product: {}", gam.bin_to_dec() * eps.bin_to_dec());
 }
