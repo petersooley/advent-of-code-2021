@@ -32,6 +32,7 @@ impl FromStr for Cmd {
 struct Position {
     depth: u32,
     horiz: u32,
+    aim: u32,
 }
 
 fn main() {
@@ -43,14 +44,15 @@ fn main() {
     let pos = cmds.fold(Position::default(), |acc, x| match x {
         Cmd::Forward(v) => Position {
             horiz: acc.horiz + v,
+            depth: acc.depth + (acc.aim * v),
             ..acc
         },
         Cmd::Down(v) => Position {
-            depth: acc.depth + v,
+            aim: acc.aim + v,
             ..acc
         },
         Cmd::Up(v) => Position {
-            depth: acc.depth - v,
+            aim: acc.aim - v,
             ..acc
         },
     });
