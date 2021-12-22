@@ -20,22 +20,6 @@ impl Dozen {
     fn bin_to_dec(&self) -> u32 {
         u16::from_str_radix(&self.to_string(), 2).unwrap() as u32
     }
-
-    fn express(gam: &Dozen, eps: &Dozen) -> (Dozen, Dozen) {
-        let mut gam_rate = [0; 12];
-        let mut eps_rate = [0; 12];
-        for i in 0..12 {
-            if gam.0[i] > eps.0[i] {
-                gam_rate[i] = 1;
-                eps_rate[i] = 0;
-            } else {
-                gam_rate[i] = 0;
-                eps_rate[i] = 1;
-            }
-        }
-
-        (Dozen(gam_rate), Dozen(eps_rate))
-    }
 }
 
 impl Display for Dozen {
@@ -73,22 +57,45 @@ struct FoldBits {
 }
 
 impl FoldBits {
-    fn fold(f: Self, next: Dozen) -> Self {
+    fn fold(f: Self, next: &Dozen) -> Self {
         Self {
-            eps: f.eps.add(&next, 0),
-            gam: f.gam.add(&next, 1),
+            eps: f.eps.add(next, 0),
+            gam: f.gam.add(next, 1),
+        }
+    }
+
+    fn express(&self) -> Self {
+        let mut gam_rate = [0; 12];
+        let mut eps_rate = [0; 12];
+        for i in 0..12 {
+            if self.gam.0[i] > self.eps.0[i] {
+                gam_rate[i] = 1;
+                eps_rate[i] = 0;
+            } else {
+                gam_rate[i] = 0;
+                eps_rate[i] = 1;
+            }
+        }
+
+        Self {
+            gam: Dozen(gam_rate),
+            eps: Dozen(eps_rate),
         }
     }
 }
 
 fn main() {
-    let lines = include_str!("../input.txt")
+    let lines: Vec<Dozen> = include_str!("../input.txt")
         .split('\n')
         .filter(|s| !s.is_empty())
-        .map(|l| l.parse::<Dozen>().unwrap());
+        .map(|l| l.parse::<Dozen>().unwrap())
+        .collect();
 
-    let counts = lines.fold(FoldBits::default(), FoldBits::fold);
-    let (gam, eps) = Dozen::express(&counts.gam, &counts.eps);
+    let counts = lines.iter().fold(FoldBits::default(), FoldBits::fold);
+    let counted = counts.express();
 
-    println!("counts product: {}", gam.bin_to_dec() * eps.bin_to_dec());
+    println!(
+        "counts product: {}",
+        counted.gam.bin_to_dec() * counted.eps.bin_to_dec()
+    );
 }
